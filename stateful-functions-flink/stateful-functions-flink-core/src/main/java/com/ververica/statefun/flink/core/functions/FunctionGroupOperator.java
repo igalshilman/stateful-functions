@@ -117,10 +117,19 @@ public class FunctionGroupOperator extends AbstractStreamOperator<Message>
             asyncOperationState,
             checkpointLockExecutor);
     //
-    // expire all the pending async operations.
+    // enqueue all the pending async operations.
     //
-    AsyncOperationFailureNotifier.fireExpiredAsyncOperations(
+    AsyncOperationFailureNotifier.enqueueExpiredAsyncOperations(
         asyncOperationStateDescriptor, reductions, asyncOperationState, getKeyedStateBackend());
+  }
+
+  @Override
+  public void open() throws Exception {
+    super.open();
+    //
+    // process envelopes enqueued via initialize state
+    //
+    reductions.processEnvelopes();
   }
 
   @Override

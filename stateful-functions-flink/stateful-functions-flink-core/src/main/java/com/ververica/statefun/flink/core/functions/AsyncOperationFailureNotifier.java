@@ -29,7 +29,7 @@ import org.apache.flink.runtime.state.VoidNamespaceSerializer;
 final class AsyncOperationFailureNotifier
     implements KeyedStateFunction<String, MapState<Long, Message>> {
 
-  static void fireExpiredAsyncOperations(
+  static void enqueueExpiredAsyncOperations(
       MapStateDescriptor<Long, Message> asyncOperationStateDescriptor,
       Reductions reductions,
       MapState<Long, Message> asyncOperationState,
@@ -44,16 +44,10 @@ final class AsyncOperationFailureNotifier
         VoidNamespaceSerializer.INSTANCE,
         asyncOperationStateDescriptor,
         asyncOperationFailureNotifier);
-
-    if (asyncOperationFailureNotifier.enqueued()) {
-      reductions.processEnvelopes();
-    }
   }
 
   private final Reductions reductions;
   private final MapState<Long, Message> asyncOperationState;
-
-  private boolean enqueued;
 
   private AsyncOperationFailureNotifier(
       Reductions reductions, MapState<Long, Message> asyncOperationState) {
@@ -68,11 +62,6 @@ final class AsyncOperationFailureNotifier
       Message metadataMessage = entry.getValue();
       Message adaptor = new AsyncMessageDecorator(asyncOperationState, futureId, metadataMessage);
       reductions.enqueue(adaptor);
-      enqueued = true;
     }
-  }
-
-  private boolean enqueued() {
-    return enqueued;
   }
 }

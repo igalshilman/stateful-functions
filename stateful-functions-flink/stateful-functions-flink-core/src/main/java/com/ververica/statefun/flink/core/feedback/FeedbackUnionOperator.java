@@ -19,6 +19,8 @@ import com.ververica.statefun.flink.core.common.SerializableFunction;
 import com.ververica.statefun.flink.core.common.SerializablePredicate;
 import com.ververica.statefun.flink.core.logger.Loggers;
 import com.ververica.statefun.flink.core.logger.UnboundedFeedbackLogger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
@@ -51,6 +53,7 @@ public final class FeedbackUnionOperator<T> extends AbstractStreamOperator<T>
   private transient boolean closedOrDisposed;
   private transient MailboxExecutor mailboxExecutor;
   private transient StreamRecord<T> reusable;
+  private transient List<T> checkpointedBuffer;
 
   FeedbackUnionOperator(
       FeedbackKey<T> feedbackKey,
@@ -101,7 +104,6 @@ public final class FeedbackUnionOperator<T> extends AbstractStreamOperator<T>
     final int maxParallelism = getRuntimeContext().getMaxNumberOfParallelSubtasks();
 
     this.reusable = new StreamRecord<>(null);
-
     //
     // Initialize the unbounded feedback logger
     //
@@ -117,12 +119,25 @@ public final class FeedbackUnionOperator<T> extends AbstractStreamOperator<T>
 
     this.feedbackLogger = feedbackLogger;
     //
-    // we first must reply previously check-pointed envelopes before we start
+    // we first must materialize previously check-pointed envelopes, which would be processed on
+    // #open()
+    //
+    this.checkpointedBuffer = new ArrayList<>(256);
+    for (KeyGroupStatePartitionStreamProvider keyedStateInput : context.getRawKeyedStateInputs()) {
+      feedbackLogger.replyLoggedEnvelops(keyedStateInput.getStream(), checkpointedBuffer::add);
+    }
+  }
+
+  @Override
+  public void open() throws Exception {
+    super.open();
+    //
+    // reply previously check-pointed envelopes before we start
     // processing any new envelopes.
     //
-    for (KeyGroupStatePartitionStreamProvider keyedStateInput : context.getRawKeyedStateInputs()) {
-      this.feedbackLogger.replyLoggedEnvelops(keyedStateInput.getStream(), this);
-    }
+    checkpointedBuffer.forEach(this::sendDownstream);
+    checkpointedBuffer.clear();
+    checkpointedBuffer = null;
     //
     // now we can start processing new messages. We do so by registering ourselves as a
     // FeedbackConsumer
@@ -156,6 +171,7 @@ public final class FeedbackUnionOperator<T> extends AbstractStreamOperator<T>
     IOUtils.closeQuietly(feedbackLogger);
     feedbackLogger = null;
     closedOrDisposed = true;
+    checkpointedBuffer = null;
   }
 
   private void registerFeedbackConsumer(Executor mailboxExecutor) {
