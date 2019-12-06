@@ -72,10 +72,6 @@ final class StatefulFunctionsJobGraphRetriever implements JobGraphRetriever {
           classPath.add(uri.toURL());
         }
       }
-      LOG.info(
-          "Found {} additional module jars in {} modules",
-          classPath.size(),
-          specs.modules().size());
       return classPath;
     } catch (IOException e) {
       throw new RuntimeException(
