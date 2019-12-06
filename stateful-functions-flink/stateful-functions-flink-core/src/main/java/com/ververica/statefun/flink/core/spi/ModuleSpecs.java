@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.ververica.statefun.flink.core;
+package com.ververica.statefun.flink.core.spi;
 
-import com.ververica.statefun.flink.core.ModuleSpecs.ModuleSpec;
-import com.ververica.statefun.flink.core.spi.Constants;
-
+import com.ververica.statefun.flink.core.spi.ModuleSpecs.ModuleSpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -76,7 +74,7 @@ public class ModuleSpecs implements Iterable<ModuleSpec>, Serializable {
       if (file.getName().endsWith(".jar")) {
         builder.withJarFile(file.getAbsoluteFile());
       } else if (file.getName().equals(Constants.STATEFUL_FUNCTIONS_MODULE_YAML)) {
-        // for module YAMLs we have to add the entire module directory as a 
+        // for module YAMLs we have to add the entire module directory as a
         // URL path. ClassLoader#findResource("module.yaml").
         builder.withYamlModuleFile(subDirectory.getAbsoluteFile());
       }

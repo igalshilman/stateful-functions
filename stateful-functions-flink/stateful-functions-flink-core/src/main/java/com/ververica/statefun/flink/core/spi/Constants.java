@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package com.ververica.statefun.flink.launcher;
+package com.ververica.statefun.flink.core.spi;
 
 public class Constants {
-  static final String MODULE_DIRECTORY = "/opt/stateful-functions/modules";
-  static final String FLINK_JOB_JAR_PATH = "/opt/flink/lib/stateful-functions-flink-core.jar";
-  static final String STATEFUL_FUNCTIONS_PACKAGE = "com.ververica.statefun.";
+  private Constants() {}
+
+  public static final String MODULE_DIRECTORY = "/opt/stateful-functions/modules";
+  public static final String FLINK_JOB_JAR_PATH =
+      "/opt/flink/lib/stateful-functions-flink-core.jar";
+  public static final String STATEFUL_FUNCTIONS_PACKAGE = "com.ververica.statefun.";
+  public static final String STATEFUL_FUNCTIONS_MODULE_YAML = "module.yaml";
 }
