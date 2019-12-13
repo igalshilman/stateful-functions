@@ -16,7 +16,7 @@
 
 package com.ververica.statefun.flink.core.common;
 
-import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.jimfs.Configuration;
@@ -44,14 +44,14 @@ public class ResourceLocatorTest {
     return Arrays.asList(Configuration.unix(), Configuration.osX(), Configuration.windows());
   }
 
-  private final FileSystem fs;
+  private final FileSystem fileSystem;
 
   public ResourceLocatorTest(Configuration filesystemConfiguration) {
-    this.fs = Jimfs.newFileSystem(filesystemConfiguration);
+    this.fileSystem = Jimfs.newFileSystem(filesystemConfiguration);
   }
 
   @Test
-  public void exampleUsage() throws IOException {
+  public void classPathExample() throws IOException {
     final Path firstModuleDir = createDirectoryWithAFile("first", "module.yaml");
     final Path secondModuleDir = createDirectoryWithAFile("second", "module.yaml");
 
@@ -60,7 +60,8 @@ public class ResourceLocatorTest {
     try (SetContextClassLoader ignored = new SetContextClassLoader(urlClassLoader)) {
 
       Iterable<URL> foundUrls =
-          ResourceLocator.findNamedResources(Constants.STATEFUL_FUNCTIONS_MODULE_YAML);
+          ResourceLocator.findNamedResources(
+              "classpath:" + Constants.STATEFUL_FUNCTIONS_MODULE_NAME);
 
       assertThat(
           foundUrls,
@@ -70,9 +71,25 @@ public class ResourceLocatorTest {
     }
   }
 
+  @Test
+  public void classPathSingleResourceExample() {
+    URL url = ResourceLocator.findNamedResource("classpath:test-descriptors.bin");
+
+    assertThat(url, notNullValue());
+  }
+
+  @Test
+  public void absolutePathExample() throws IOException {
+    Path modulePath = createDirectoryWithAFile("some-module", "module.yaml").resolve("module.yaml");
+
+    URL url = ResourceLocator.findNamedResource(modulePath.toUri().toString());
+
+    assertThat(url, is(url(modulePath)));
+  }
+
   private Path createDirectoryWithAFile(
       String basedir, @SuppressWarnings("SameParameterValue") String filename) throws IOException {
-    final Path dir = fs.getPath(basedir);
+    final Path dir = fileSystem.getPath(basedir);
     Files.createDirectories(dir);
 
     Path file = dir.resolve(filename);

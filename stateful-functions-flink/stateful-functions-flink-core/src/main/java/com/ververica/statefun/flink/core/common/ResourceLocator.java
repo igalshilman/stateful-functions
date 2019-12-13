@@ -15,8 +15,10 @@
  */
 package com.ververica.statefun.flink.core.common;
 
-import com.ververica.statefun.flink.core.yaml.YamlServiceLoader;
+import com.ververica.statefun.flink.core.jsonmodule.JsonServiceLoader;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -25,18 +27,51 @@ import org.apache.flink.shaded.guava18.com.google.common.base.MoreObjects;
 public final class ResourceLocator {
   private ResourceLocator() {}
 
-  /** Locates a resource with a given name in the classpath / url path. */
+  /** Locates a resource with a given name in the classpath or url path. */
   public static Iterable<URL> findNamedResources(String name) {
+    URI nameUri = URI.create(name);
+    if (!isClasspath(nameUri)) {
+      throw new IllegalArgumentException(
+          "unsupported schema " + nameUri.getScheme() + " only classpath: schema is supported.");
+    }
+    return urlClassPathResource(nameUri);
+  }
+
+  public static URL findNamedResource(String name) {
+    URI nameUri = URI.create(name);
+    if (isClasspath(nameUri)) {
+      Iterable<URL> resources = urlClassPathResource(nameUri);
+      return firstElementOrNull(resources);
+    }
+    try {
+      return nameUri.toURL();
+    } catch (MalformedURLException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  private static boolean isClasspath(URI nameUri) {
+    return nameUri.getScheme().equalsIgnoreCase("classpath");
+  }
+
+  private static Iterable<URL> urlClassPathResource(URI uri) {
     ClassLoader cl =
         MoreObjects.firstNonNull(
             Thread.currentThread().getContextClassLoader(),
-            YamlServiceLoader.class.getClassLoader());
+            JsonServiceLoader.class.getClassLoader());
     try {
-      Enumeration<URL> enumeration = cl.getResources(name);
+      Enumeration<URL> enumeration = cl.getResources(uri.getSchemeSpecificPart());
       return asIterable(enumeration);
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  private static URL firstElementOrNull(Iterable<URL> urls) {
+    for (URL url : urls) {
+      return url;
+    }
+    return null;
   }
 
   private static <T> Iterable<T> asIterable(Enumeration<T> enumeration) {
