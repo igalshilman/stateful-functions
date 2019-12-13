@@ -24,3 +24,16 @@ module:
             target: "com.example/hello/{{$.name}}"
             messageType: com.ververica.test.SimpleMessage
             descriptorSet: classpath:test-descriptors.bin
+    ingressess:
+      - ingress:
+          meta:
+            type: com.ververica.statefun.sdk.kafka/universal-kafka-connector
+            id: com.mycomp.igal/names
+          spec:
+            address: kafka-broker:9092
+            topics:
+              - names
+            properties:
+              - consumer.group: greeter
+            messageType: com.ververica.test.SimpleMessage
+            descriptorSet: classpath:test-descriptors.bin
