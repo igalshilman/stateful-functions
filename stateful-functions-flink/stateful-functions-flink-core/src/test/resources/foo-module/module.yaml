@@ -1,0 +1,11 @@
+module:
+  meta:
+    type: remote
+  spec:
+    functions:
+      function:
+        meta:
+          type: com.example/hello
+        spec:
+          host: localhost
+          port: 5000

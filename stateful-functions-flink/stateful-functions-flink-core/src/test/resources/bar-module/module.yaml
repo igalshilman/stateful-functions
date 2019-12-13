@@ -1,0 +1,26 @@
+module:
+  meta:
+    type: remote
+  spec:
+    functions:
+      - function:
+          meta:
+            type: com.example/hello
+          spec:
+            host: localhost
+            port: 5000
+      - function:
+          meta:
+            type: com.foo/world
+          spec:
+            host: localhost
+            port: 8855
+    routers:
+      - router:
+          meta:
+            type: com.ververica.statefun.sdk/protobuf-router
+          spec:
+            ingress: com.mycomp.igal/names
+            target: "com.example/hello/{{$.name}}"
+            messageType: com.ververica.test.SimpleMessage
+            descriptorSet: classpath:test-descriptors.bin
