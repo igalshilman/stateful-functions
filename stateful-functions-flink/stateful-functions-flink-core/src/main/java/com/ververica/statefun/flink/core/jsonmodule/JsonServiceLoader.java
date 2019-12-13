@@ -35,7 +35,7 @@ public final class JsonServiceLoader {
   public static Iterable<StatefulFunctionModule> load() {
     ObjectMapper mapper = mapper();
 
-    Iterable<URL> namedResources = findNamedResources(Constants.STATEFUL_FUNCTIONS_MODULE_NAME);
+    Iterable<URL> namedResources = findNamedResources("classpath" + Constants.STATEFUL_FUNCTIONS_MODULE_NAME);
 
     return StreamSupport.stream(namedResources.spliterator(), false)
         .map(moduleUrl -> fromUrl(mapper, moduleUrl))
