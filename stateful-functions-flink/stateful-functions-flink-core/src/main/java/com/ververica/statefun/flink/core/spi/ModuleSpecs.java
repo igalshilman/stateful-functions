@@ -73,7 +73,7 @@ public class ModuleSpecs implements Iterable<ModuleSpec>, Serializable {
       }
       if (file.getName().endsWith(".jar")) {
         builder.withJarFile(file.getAbsoluteFile());
-      } else if (file.getName().equals(Constants.STATEFUL_FUNCTIONS_MODULE_YAML)) {
+      } else if (file.getName().equals(Constants.STATEFUL_FUNCTIONS_MODULE_NAME)) {
         // for module YAMLs we have to add the entire module directory as a
         // URL path. ClassLoader#findResource("module.yaml").
         builder.withYamlModuleFile(subDirectory.getAbsoluteFile());

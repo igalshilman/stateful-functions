@@ -23,5 +23,5 @@ public class Constants {
   public static final String FLINK_JOB_JAR_PATH =
       "/opt/flink/lib/stateful-functions-flink-core.jar";
   public static final String STATEFUL_FUNCTIONS_PACKAGE = "com.ververica.statefun.";
-  public static final String STATEFUL_FUNCTIONS_MODULE_YAML = "module.yaml";
+  public static final String STATEFUL_FUNCTIONS_MODULE_NAME = "module.yaml";
 }
